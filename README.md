@@ -64,6 +64,6 @@ Seleccionas una imagen y esta ya estará con un peso reducido. Cuando accionas e
 
 ### Versión
 
-1.0.0
+1.0.1
 
 ~Dalthon
