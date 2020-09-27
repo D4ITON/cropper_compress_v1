@@ -80,7 +80,7 @@ window.onload = function () {
 
       if (cropper && files && files.length) {
         file = files[0];
-        console.log(file); // muestra la imagen actual que esta cargada
+        // console.log(file); // muestra la imagen actual que esta cargada
         fileNameImage = file.name;
         pesoInicialSize = (parseInt(file.size) / 1024).toFixed(3);
         pesoInicialShow.innerHTML = pesoInicialSize + " Kb";
@@ -95,7 +95,7 @@ window.onload = function () {
             var actualImg = new Image();
             actualImg.src = readerSize.result;
             actualImg.onload = function () {
-              console.log(actualImg.width, actualImg.height);
+              // console.log(actualImg.width, actualImg.height);
               dataWidth.value = actualImg.width;
               dataHeight.value = actualImg.height;
             };
@@ -118,7 +118,7 @@ window.onload = function () {
           readerPng.readAsArrayBuffer(input.files[0]);
           if (file) reader.readAsDataURL(file);
           source_image.src = uploadedImageURL; // esto muestra la imagen
-          console.log(source_image);
+          // console.log(source_image);
           cropper.destroy();
           cropper = new Cropper(source_image, options);
           inputImage.value = "";
@@ -138,8 +138,6 @@ window.onload = function () {
     inputImage.disabled = true;
     inputImage.parentNode.className += " disabled";
   }
-
-  console.log(source_image);
 
   // new cropper
   var cropper = new Cropper(source_image, options);
@@ -193,6 +191,7 @@ window.onload = function () {
           showResultPNG(base64Output);
         };
       } else {
+        console.log("no transparencia");
         result_image.src = middleImage;
         if (recorte) result_image.src = getImageLive().src; // esto se da como valor inicial
         var image = imageCompress(result_image);
@@ -261,7 +260,6 @@ window.onload = function () {
     switch (data.method) {
       case "libre":
         options["aspectRatio"] = NaN;
-        console.log(arrayImages);
         cen = false;
         activeAdvanced.disabled = true;
         activaBotonCancel();
@@ -347,7 +345,8 @@ window.onload = function () {
   var recorte = false; // cuenta si se ha cortado
   /* btn saveUpload */
   var btnSaveUpload = document.getElementById("btnSaveUpload");
-  btnSaveUpload.onclick = async function () {
+  btnSaveUpload.onclick = async function (e) {
+    e.preventDefault();
     if (this.innerHTML === "Cortar") {
       this.innerHTML = "Descargar";
       this.style.background = "#1A73E8";
@@ -361,7 +360,7 @@ window.onload = function () {
       btnCancel.disabled = true;
       dataHeight.disabled = dataWidth.disabled = true;
       recorte = true; // indica que ha habido almenos un recorte
-    } else if (this.innerHTML === "Descargar" || this.innerHTML === "uno más") {
+    } else if (this.innerHTML === "Descargar") {
       /** Opcion subir
        *  despues de almenos un recorte
        */
@@ -373,6 +372,9 @@ window.onload = function () {
       // comparar si no tuvo recorte
       if (!recorte) {
         // compara si tiene tranparencia
+
+        console.log(hasAlphaValue);
+
         if (hasAlphaValue) {
           var options = {
             maxSizeMB: 1,
@@ -392,7 +394,10 @@ window.onload = function () {
           };
         } else {
           // si no tiene tranparencia
-          image = imageCompress(result_image);
+
+          image = getImageLive();
+          image = imageCompress(image);
+
           resultImageMiddleImage();
           base64Output = image.src;
           // isBase64(base64Output);
@@ -548,21 +553,6 @@ window.onload = function () {
       });
   }
 
-  /** Progessbar */
-  function progressMove() {
-    var elem = document.getElementById("myBar");
-    var width = 1;
-    var id = setInterval(frame, 10);
-    function frame() {
-      if (width >= 100) {
-        clearInterval(id);
-      } else {
-        width++;
-        elem.style.width = width + "%";
-      }
-    }
-  }
-
   /**
    * Compresion de imagen JIC
    * @param {image} imagen
@@ -686,70 +676,48 @@ window.onload = function () {
    * @param {base64} base64Format - tiene el formato validado
    */
   function muestraProgressBar(formatoBase64, base64Format) {
+    // console.log(formatoBase64, base64Format);
+
+    // console.log(base64Format);
+
     if (formatoBase64 === "data:image") {
-      inputImage.style.display = "none";
-      actions.innerHTML =
-        // progress bar
-        "<fieldset>" +
-        "<legend>subiendo</legend>" +
-        "<div id='myProgress'>" +
-        "<div id='myBar'></div>" +
-        "<div>" +
-        "</fieldset>" +
-        "<fieldset>" +
-        "<legend>Resultado</legend>" +
-        "<a id='downloadImage' href=" +
-        base64Format +
-        " download='" +
-        fileNameImage +
-        "'>descargar imagen</a>" +
-        "</fieldset>";
-      progressMove();
+      // inputImage.style.display = "none";
+      // actions.innerHTML =
+      //   // progress bar
+      //   "<fieldset>" +
+      //   "<legend>subiendo</legend>" +
+      //   "<div id='myProgress'>" +
+      //   "<div id='myBar'></div>" +
+      //   "<div>" +
+      //   "</fieldset>" +
+      //   "<fieldset>" +
+      //   "<legend>Resultado</legend>" +
+      //   "<a id='downloadImage' href=" +
+      //   base64Format +
+      //   " download='" +
+      //   fileNameImage +
+      //   "'>descargar imagen</a>" +
+      //   "</fieldset>";
+
+      var a = document.createElement("a"); //Create <a>
+      a.href = base64Format; //Image Base64 Goes here
+      a.download = fileNameImage; //File name Here
+      a.click(); //Downloaded file
     } else if (formatoBase64 === "data:,") {
       btnSaveUpload.innerHTML = "uno más";
     }
-  }
-
-  function urltoFile(url, filename, mimeType) {
-    return fetch(url)
-      .then(function (res) {
-        return res.arrayBuffer();
-      })
-      .then(function (buf) {
-        return new File([buf], filename, { type: mimeType });
-      });
   }
 
   /**
    * compara si es formato base64
    */
   function isBase64(dataToServer) {
+    // console.log(dataToServer);
+
     let dataToServerString = dataToServer.substr(0, 10);
 
     if (dataToServerString === "data:image") {
-      urltoFile(dataToServer, fileNameImage, uploadedImageType).then(function (
-        file
-      ) {
-        // return dataToServer;
-        axios
-          .post("https://jsonplaceholder.typicode.com/posts", {
-            imageBase64: dataToServer,
-            imageFile: file,
-          })
-          .then((r) => console.log(r))
-          .catch((e) => console.log(e));
-      });
-
       return dataToServer;
     }
-  }
-
-  // Detecta evento submit de formulario
-  document
-    .getElementById("imageInputForm")
-    .addEventListener("submit", getRequestPost);
-  // Previene que se recarge la pagina
-  function getRequestPost(evt) {
-    evt.preventDefault();
   }
 };
